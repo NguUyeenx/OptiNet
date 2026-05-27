@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptiNet - Network Speedup & Diagnostics</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glow-backdrop"></div>
+    
+    <!-- Floating Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="app-container">
+        <!-- HEADER SECTION -->
+        <header class="app-header glass-panel">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-bolt-lightning pulse-glow"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>OPTINET</h1>
+                    <span class="sub-logo">ADVANCED NETWORK ENGINE</span>
+                </div>
+            </div>
+            
+            <div class="connection-status">
+                <div class="status-indicator">
+                    <span class="status-dot warning" id="statusDot"></span>
+                    <span class="status-label" id="statusLabel">System Unoptimized</span>
+                </div>
+                <div class="network-info">
+                    <i class="fa-solid fa-wifi text-cyan"></i>
+                    <span id="activeSsid" class="text-white font-weight-bold">Scanning...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN ACTION ROW -->
+        <section class="action-banner glass-panel">
+            <div class="banner-text">
+                <h2>OptiNet - Ultra Network Speedup</h2>
+                <p>Phân tích sâu cấu hình DNS, tối ưu kích thước gói tin MTU, quét tiến trình rác chạy ngầm và làm sạch dữ liệu đệm kết nối Wi-Fi.</p>
+            </div>
+            <div class="banner-actions">
+                <button class="btn btn-secondary" id="btnScan" onclick="runDiagnostics()">
+                    <i class="fa-solid fa-magnifying-glass"></i> Scan & Diagnose
+                </button>
+                <button class="btn btn-primary btn-glow" id="btnOptimize" onclick="optimizeNetwork()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Optimize Now
+                </button>
+            </div>
+        </section>
+
+        <!-- DASHBOARD GRID -->
+        <main class="dashboard-grid">
+            
+            <!-- PANEL 1: SPEED & LATENCY -->
+            <section class="glass-panel card-panel grid-span-2">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-gauge-high text-cyan"></i> Speed & Latency</h3>
+                    <span class="badge" id="speedtestStatus">Default</span>
+                </div>
+                <div class="card-body speed-gauges-container">
+                    
+                    <div class="gauge-card">
+                        <div class="gauge-circle" style="--percent: 0;" id="downloadGauge">
+                            <svg>
+                                <circle cx="80" cy="80" r="70"></circle>
+                                <circle cx="80" cy="80" r="70" class="progress-bar-svg" id="downloadBar"></circle>
+                            </svg>
+                            <div class="gauge-value">
+                                <span class="number" id="downloadVal">0.0</span>
+                                <span class="unit">Mbps</span>
+                            </div>
+                        </div>
+                        <span class="gauge-label"><i class="fa-solid fa-circle-down text-emerald"></i> Download Speed</span>
+                    </div>
+
+                    <div class="gauge-card">
+                        <div class="gauge-circle" style="--percent: 0;" id="uploadGauge">
+                            <svg>
+                                <circle cx="80" cy="80" r="70"></circle>
+                                <circle cx="80" cy="80" r="70" class="progress-bar-svg" id="uploadBar"></circle>
+                            </svg>
+                            <div class="gauge-value">
+                                <span class="number" id="uploadVal">0.0</span>
+                                <span class="unit">Mbps</span>
+                            </div>
+                        </div>
+                        <span class="gauge-label"><i class="fa-solid fa-circle-up text-cyan"></i> Upload Speed</span>
+                    </div>
+
+                    <div class="latency-stats-list">
+                        <div class="latency-item">
+                            <div class="item-icon bg-opacity-magenta"><i class="fa-solid fa-signal text-magenta"></i></div>
+                            <div class="item-details">
+                                <span class="item-title">Average Latency (Ping)</span>
+                                <span class="item-value text-magenta" id="pingVal">-- ms</span>
+                            </div>
+                        </div>
+                        <div class="latency-item">
+                            <div class="item-icon bg-opacity-gold"><i class="fa-solid fa-waveform-path text-gold"></i></div>
+                            <div class="item-details">
+                                <span class="item-title">Latency Jitter</span>
+                                <span class="item-value text-gold" id="jitterVal">-- ms</span>
+                            </div>
+                        </div>
+                        <div class="latency-item">
+                            <div class="item-icon bg-opacity-red"><i class="fa-solid fa-circle-exclamation text-red"></i></div>
+                            <div class="item-details">
+                                <span class="item-title">Packet Loss</span>
+                                <span class="item-value text-red" id="lossVal">-- %</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- PANEL 2: DNS BENCHMARK -->
+            <section class="glass-panel card-panel grid-span-2">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-server text-emerald"></i> DNS Benchmark</h3>
+                    <button class="btn-icon" title="Refresh" onclick="runDiagnostics()"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+                <div class="card-body">
+                    <p class="panel-desc">Tốc độ phân giải tên miền của các DNS Server hoạt động. Hệ thống sẽ tự động đo lường và đưa ra gợi ý tốt nhất.</p>
+                    
+                    <div class="dns-list-container">
+                        <table class="dns-table">
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Speed</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dnsTableBody">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No benchmark data. Click "Scan & Diagnose" to begin.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 4: BACKGROUND NOISE & MTU -->
+            <section class="glass-panel card-panel grid-span-2">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-microchip text-magenta"></i> Bandwidth & MTU</h3>
+                    <span class="badge danger" id="hogsBadge">0 Hogs</span>
+                </div>
+                <div class="card-body bg-hogs-grid">
+                    
+                    <div class="hogs-section">
+                        <h4 class="section-title">Background Bandwidth Hogs</h4>
+                        <p class="panel-desc">Các phần mềm rác hoặc widget Windows liên tục gửi nhận gói tin nền làm tăng Ping/Jitter của bạn khi chơi game hoặc xem phim.</p>
+                        
+                        <div class="hogs-list" id="hogsList">
+                            <div class="text-center text-muted py-5">Chưa quét tiến trình hoạt động.</div>
+                        </div>
+                    </div>
+
+                    <div class="system-tuning-section">
+                        <h4 class="section-title">System Configuration Tuning</h4>
+                        
+                        <div class="tuning-card">
+                            <div class="tuning-details">
+                                <h5>Optimal MTU Size</h5>
+                                <p class="text-muted text-sm">MTU sai lệch sẽ gây phân mảnh gói tin làm sụt giảm tốc độ.</p>
+                                <div class="mtu-display mt-2">
+                                    <span class="mtu-value" id="mtuVal">1500</span>
+                                    <span class="mtu-status text-emerald" id="mtuStatus"><i class="fa-solid fa-check-double"></i> Standard</span>
+                                </div>
+                            </div>
+                            <div class="tuning-action">
+                                <button class="btn btn-secondary btn-sm" onclick="setOptimalMtu()"><i class="fa-solid fa-sliders"></i> Tweak MTU</button>
+                            </div>
+                        </div>
+
+                        <div class="tuning-card mt-3">
+                            <div class="tuning-details">
+                                <h5>LLMNR Multicast</h5>
+                                <p class="text-muted text-sm">LLMNR liên tục phát tán yêu cầu tìm kiếm tên cục bộ, tăng nhiễu mạng.</p>
+                                <div class="llmnr-display mt-2">
+                                    <span class="llmnr-value text-magenta" id="llmnrVal">Enabled</span>
+                                </div>
+                            </div>
+                            <div class="tuning-action">
+                                <button class="btn btn-secondary btn-sm" id="btnToggleLlmnr" onclick="optimizeNetwork()"><i class="fa-solid fa-power-off"></i> Disable LLMNR</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- PANEL 3: WI-FI PROFILES CLEANER -->
+            <section class="glass-panel card-panel grid-span-2">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-broom text-gold"></i> Wi-Fi Profile Cleaner</h3>
+                    <span class="badge warning" id="staleWifiBadge">0 Stale</span>
+                </div>
+                <div class="card-body flex-col justify-between">
+                    <div>
+                        <p class="panel-desc">Windows lưu trữ toàn bộ lịch sử mạng Wi-Fi bạn đã kết nối. Quá nhiều cấu hình Wi-Fi rác/cũ làm chậm thời gian dò quét tìm kiếm mạng.</p>
+                        
+                        <div class="wifi-profiles-container" id="wifiList">
+                            <div class="text-center text-muted py-4">Chưa quét thông tin Wi-Fi.</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top border-muted flex justify-between align-center">
+                        <span class="text-muted text-sm" id="wifiCountLabel">Total Saved Profiles: 0</span>
+                        <button class="btn btn-secondary btn-sm" id="btnCleanAllWifi" onclick="deleteAllStaleWifi()" style="display: none;">
+                            <i class="fa-solid fa-trash-can"></i> Clean All Stale
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 5: COMPARATIVE REPORT (BEFORE VS AFTER) -->
+            <section class="glass-panel card-panel grid-span-4 compare-section" id="compareSection" style="display: none;">
+                <div class="card-header border-bottom border-muted pb-3">
+                    <div class="flex align-center">
+                        <div class="compare-icon-pulse"><i class="fa-solid fa-chart-line text-emerald"></i></div>
+                        <div class="ml-3">
+                            <h3>Performance Analytics</h3>
+                            <p class="text-muted text-sm">Đo lường chi tiết mức độ cải thiện tốc độ truyền tải và mức độ sụt giảm độ trễ kết nối.</p>
+                        </div>
+                    </div>
+                    <span class="badge success glow-green">Optimized Successfully</span>
+                </div>
+                <div class="card-body compare-report-grid mt-4">
+                    
+                    <div class="compare-metric-card">
+                        <span class="compare-label">Download Speed</span>
+                        <div class="compare-numbers">
+                            <div class="comp-before"><span class="lbl-b">Before</span><span class="val" id="compDlBefore">0.0</span><span class="u">Mbps</span></div>
+                            <div class="comp-arrow"><i class="fa-solid fa-angles-right text-emerald"></i></div>
+                            <div class="comp-after"><span class="lbl-a">After</span><span class="val text-emerald" id="compDlAfter">0.0</span><span class="u text-emerald">Mbps</span></div>
+                        </div>
+                        <div class="compare-improvement positive" id="compDlImp">+0.0% Speedup</div>
+                    </div>
+
+                    <div class="compare-metric-card">
+                        <span class="compare-label">Upload Speed</span>
+                        <div class="compare-numbers">
+                            <div class="comp-before"><span class="lbl-b">Before</span><span class="val" id="compUlBefore">0.0</span><span class="u">Mbps</span></div>
+                            <div class="comp-arrow"><i class="fa-solid fa-angles-right text-emerald"></i></div>
+                            <div class="comp-after"><span class="lbl-a">After</span><span class="val text-emerald" id="compUlAfter">0.0</span><span class="u text-emerald">Mbps</span></div>
+                        </div>
+                        <div class="compare-improvement positive" id="compUlImp">+0.0% Speedup</div>
+                    </div>
+
+                    <div class="compare-metric-card">
+                        <span class="compare-label">Average Latency (Ping)</span>
+                        <div class="compare-numbers">
+                            <div class="comp-before"><span class="lbl-b">Before</span><span class="val" id="compPingBefore">0 ms</span></div>
+                            <div class="comp-arrow"><i class="fa-solid fa-angles-right text-emerald"></i></div>
+                            <div class="comp-after"><span class="lbl-a">After</span><span class="val text-emerald" id="compPingAfter">0 ms</span></div>
+                        </div>
+                        <div class="compare-improvement positive" id="compPingImp">-0.0 ms Latency Reduced</div>
+                    </div>
+
+                    <div class="compare-metric-card">
+                        <span class="compare-label">System Clutter & Noise</span>
+                        <div class="compare-summary-details">
+                            <div class="summary-stat-row">
+                                <span class="lbl">Cấu hình Wi-Fi rác đã dọn:</span>
+                                <span class="val text-emerald font-weight-bold" id="compWifiCleaned">0 profiles</span>
+                            </div>
+                            <div class="summary-stat-row mt-2">
+                                <span class="lbl">LLMNR Multicast:</span>
+                                <span class="val text-emerald font-weight-bold" id="compLlmnrStatus">Safely Disabled</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- TERMINAL ENGINE ACTIVITY LOGGER -->
+        <section class="glass-panel card-panel mt-4">
+            <div class="card-header border-bottom border-muted pb-2">
+                <h3><i class="fa-solid fa-rectangle-terminal text-cyan"></i> OptiNet Real-time Activity Logs</h3>
+                <div class="flex align-center">
+                    <span class="terminal-status" id="engineStatusIndicator">Idle / Ready</span>
+                    <button class="btn btn-secondary btn-xs ml-3" onclick="resetEngine()"><i class="fa-solid fa-rotate-left"></i> Reset Logs</button>
+                </div>
+            </div>
+            <div class="card-body pb-1">
+                <!-- Terminal Output Box -->
+                <div class="terminal-output" id="terminalLog">
+                    [System Info] Sẵn sàng phân tích kết nối mạng của bạn. Nhấp "Scan & Diagnose" hoặc "Optimize Now" để bắt đầu...
+                </div>
+                <!-- Mini Progress bar -->
+                <div class="terminal-progress-bar" id="terminalProgressContainer" style="display: none;">
+                    <div class="progress-bar-fill" id="terminalProgressFill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>OptiNet &copy; 2026. Developed by <strong>Nguyễn Trọng Nguyễn</strong>.</p>
+                <div class="footer-links">
+                    <a href="https://github.com/NguUyeenx/OptiNet" target="_blank" class="footer-link">
+                        <i class="fa-brands fa-github text-cyan"></i> GitHub
+                    </a>
+                    <a href="https://www.facebook.com/nguyentrongnguyen245" target="_blank" class="footer-link">
+                        <i class="fa-brands fa-facebook text-cyan"></i> Facebook
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ELEVATED ADMIN PRIVILEGES POPUP MODAL -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-shield-halved text-magenta"></i> Administrator Privileges Required</h3>
+                <button class="modal-close" onclick="closeAdminModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Một số lệnh cấu hình mạng hệ thống (như đổi DNS hoặc MTU) yêu cầu chạy máy chủ Python với quyền Admin để thực thi trực tiếp.</p>
+                <p class="font-weight-bold text-magenta mt-2">Bạn có thể tự tay thực thi lệnh này bằng cách mở PowerShell (Admin) và nhập:</p>
+                
+                <div class="code-terminal-box mt-3">
+                    <code id="adminCodeText">Set-DnsClientServerAddress -InterfaceAlias Wi-Fi -ServerAddresses ("1.1.1.1", "8.8.8.8")</code>
+                    <button class="btn-copy" onclick="copyAdminCommand()" title="Copy command"><i class="fa-regular fa-copy"></i></button>
+                </div>
+                
+                <div class="alert-info-box mt-4">
+                    <h5><i class="fa-solid fa-circle-info text-cyan"></i> Cách khởi chạy Backend với quyền Administrator:</h5>
+                    <ol class="mt-2 text-sm text-muted">
+                        <li>Đóng cửa sổ dòng lệnh Python server hiện tại.</li>
+                        <li>Tìm và mở ứng dụng <strong>Command Prompt</strong> hoặc <strong>PowerShell</strong> bằng cách nhấp chuột phải chọn <strong>"Run as Administrator"</strong>.</li>
+                        <li>Chạy lại lệnh: <code class="text-white">python server.py</code> để cho phép Dashboard áp dụng cấu hình tự động chỉ với 1-click.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer mt-4 flex justify-end">
+                <button class="btn btn-secondary" onclick="closeAdminModal()">Close</button>
+                <button class="btn btn-primary" onclick="copyAdminCommand()"><i class="fa-solid fa-copy"></i> Copy Command</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
